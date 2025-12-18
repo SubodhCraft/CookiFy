@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "623864776470",
+    "project_id": "cookify-individual",
+    "storage_bucket": "cookify-individual.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623864776470:android:df43dae0595c84249a7237",
+        "android_client_info": {
+          "package_name": "com.example.cookify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBc-rHGejvgBrTTQ3Dg7ZhVSKBK8A1ITRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
