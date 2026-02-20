@@ -3,15 +3,21 @@ package com.example.cookify.model
 data class UserModel(
     val userId: String = "",
     val email: String = "",
-    val firstName: String = "",
-    val lastName: String = "",
+    val firstName: String = "",    val lastName: String = "",
     val dob: String = "",
     val contact: String = "",
-    val username: String = "" // <--- ADD THIS LINE
+    val username: String = ""
 ){
-    fun toMap() : Map<String,Any?>{
+    fun toMap() : Map<String, Any?> {
+        // FIX: Include all relevant fields to be saved in the database.
         return mapOf(
-            "contact" to contact
+            "userId" to userId,
+            "email" to email,
+            "firstName" to firstName,
+            "lastName" to lastName,
+            "dob" to dob,
+            "contact" to contact,
+            "username" to username
         )
     }
 }

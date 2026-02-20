@@ -4,19 +4,15 @@ import com.example.cookify.model.UserModel
 import com.google.firebase.auth.FirebaseUser
 
 interface UserRepo {
-    //{
-    //    "success":true,
-    //    "message":"Email snet"
-    // }
+
     fun login(email: String, password: String,
               callback: (Boolean, String)-> Unit)
 
     fun forgetPassword(email:String,callback: (Boolean, String) -> Unit)
 
-
     fun register(
         email: String, password: String,
-        callback: (Boolean, String, String) -> Unit
+        callback: (Boolean, String, FirebaseUser?) -> Unit
     )
 
     fun addUserToDatabase(userId: String, model: UserModel,

@@ -51,21 +51,17 @@ fun SplashBody() {
     LaunchedEffect (Unit) {
         delay(3000)
 
-        val intent= Intent(context,
-            LoginActivity::class.java)
-        context.startActivity(intent)
-        activity.finish()
-//        if (currentUser != null) {
-//            // User already logged in
-//            val intent = Intent(context, DashboardActivity::class.java)
-//            context.startActivity(intent)
-//            activity.finish()
-//        } else {
-//            // User not logged in
-//            val intent = Intent(context, LoginActivity::class.java)
-//            context.startActivity(intent)
-//            activity.finish()
-//        }
+        if (currentUser != null) {
+            // User already logged in
+            val intent = Intent(context, DashboardActivity::class.java)
+            context.startActivity(intent)
+            activity.finish()
+        } else {
+            // User not logged in
+            val intent = Intent(context, LoginActivity::class.java)
+            context.startActivity(intent)
+            activity.finish()
+        }
 
     }
     Scaffold { padding ->
@@ -80,9 +76,9 @@ fun SplashBody() {
             Image(
                 painter = painterResource(R.drawable.cookify),
                 contentDescription = null,
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(130.dp)
             )
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(150.dp))
             CircularProgressIndicator(
                 color = Color.Blue
             )

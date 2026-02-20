@@ -1,164 +1,4 @@
 package com.example.cookify.view
-//
-//import android.app.Activity
-//import android.os.Bundle
-//import androidx.activity.ComponentActivity
-//import androidx.activity.compose.setContent
-//import androidx.activity.enableEdgeToEdge
-//import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.material3.CenterAlignedTopAppBar
-//import androidx.compose.material3.ExperimentalMaterial3Api
-//import androidx.compose.material3.Icon
-//import androidx.compose.material3.IconButton
-//import androidx.compose.material3.NavigationBar
-//import androidx.compose.material3.NavigationBarItem
-//import androidx.compose.material3.Scaffold
-//import androidx.compose.material3.Text
-//import androidx.compose.material3.TopAppBarDefaults
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.remember
-//import androidx.compose.runtime.setValue
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.res.painterResource
-//import com.example.cookify.ui.theme.Blue
-//import com.example.cookify.ui.theme.White
-//import com.example.cookify.HomeScreen
-//import com.example.cookify.MoreScreen
-//import com.example.cookify.NotificationScreen
-//import com.example.cookify.R
-//import com.example.cookify.SearchScreen
-//
-//class DashboardActivity : ComponentActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
-//        setContent {
-//            DashboardBody()
-//        }
-//    }
-//}
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun DashboardBody() {
-//
-//    val context = LocalContext.current
-//    val activity = context as Activity
-//
-//    val email = activity.intent.getStringExtra("email")
-//    val password = activity.intent.getStringExtra("password")
-//
-//    data class NavItem(val label: String, val icon: Int)
-//
-//    var selectedIndex by remember { mutableStateOf(0) }
-//
-//    var listNav = listOf(
-//        NavItem(
-//            label = "Home",
-//            icon = R.drawable.baseline_home_24,
-//        ),
-//        NavItem(
-//            label = "Search",
-//            icon = R.drawable.baseline_search_24,
-//        ),
-//        NavItem(
-//            label = "Notification",
-//            icon = R.drawable.baseline_notifications_none_24,
-//        ),
-//        NavItem(
-//            label = "More",
-//            icon = R.drawable.baseline_view_module_24,
-//        ),
-//
-//        )
-//
-//    Scaffold(
-//        topBar = {
-//            CenterAlignedTopAppBar(
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Blue,
-//                    actionIconContentColor = White,
-//                    titleContentColor = White,
-//                    navigationIconContentColor = White
-//                ),
-//                title = { Text("Dashboard") },
-//                navigationIcon = {
-//                    IconButton(onClick = {
-//                        activity.finish()
-//                    }) {
-//                        Icon(
-//                            painter = painterResource(R.drawable.baseline_arrow_back_24),
-//                            contentDescription = null
-//                        )
-//                    }
-//                },
-//
-//                actions = {
-//                    IconButton(onClick = {
-//
-//                    }) {
-//                        Icon(
-//                            painter = painterResource(R.drawable.baseline_more_horiz_24),
-//                            contentDescription = null
-//                        )
-//                    }
-//
-//                    IconButton(onClick = {
-//
-//                    }) {
-//                        Icon(
-//                            painter = painterResource(R.drawable.baseline_more_horiz_24),
-//                            contentDescription = null
-//                        )
-//                    }
-//
-//
-//                }
-//            )
-//        },
-//        bottomBar = {
-//            NavigationBar {
-//                listNav.forEachIndexed { index,item->
-//                    NavigationBarItem(
-//                        icon = {
-//                            Icon(
-//                                painter = painterResource(item.icon),
-//                                contentDescription = null
-//                            )
-//                        },
-//                        label = {
-//                            Text(item.label)
-//                        },
-//                        onClick = {
-//                            selectedIndex = index
-//                        },
-//                        selected = selectedIndex == index
-//                    )
-//                }
-//            }
-//        }
-//    ) { padding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding)
-//        ) {
-//            when(selectedIndex){
-//                0-> HomeScreen()
-//                1-> SearchScreen()
-//                2-> NotificationScreen()
-//                3-> MoreScreen()
-//                else -> HomeScreen()
-//            }
-//        }
-//    }
-//}
-
 
 import android.content.Intent
 import android.os.Bundle
@@ -184,6 +24,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -212,23 +54,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.cookify.R // Assuming R file is updated
+import com.example.cookify.R
+import com.example.cookify.model.RecipeModel
 import com.example.cookify.ui.theme.LightGreen
+import com.example.cookify.ui.theme.DarkGreen
+import com.example.cookify.ui.theme.White
 
-// --- Recipe Finder Theme Colors (Consistent with Login/Forget) --- )
-val GreyText = Color.Black.copy(alpha = 0.6f)
-
+// --- Shared Colors (If needed) ---
+private val GreyText = Color.Black.copy(alpha = 0.6f)
 // --- Data Structures ---
-data class Recipe(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val prepTime: String,
-    val imageResId: Int
-)
-
 data class NavItem(val label: String, val icon: Int)
-
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -241,10 +76,134 @@ class DashboardActivity : ComponentActivity() {
 }
 
 // Dummy screen composables for navigation tabs
-@Composable fun SearchScreen() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Search Recipes", fontSize = 24.sp, color = DarkGreen) }
-@Composable fun FavoritesScreen() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("My Favorites", fontSize = 24.sp, color = DarkGreen) }
-@Composable fun ProfileScreen() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Profile Settings", fontSize = 24.sp, color = DarkGreen) }
-// Note: We changed "Notification" and "More" to "Favorites" and "Profile" for a typical app flow.
+// SearchScreen is now in its own file
+
+@Composable 
+fun FavoritesScreen() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+    Text("My Favorites", fontSize = 24.sp, color = DarkGreen) 
+}
+
+@Composable 
+fun ProfileScreen() {
+    val context = LocalContext.current
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Profile Image Placeholder
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(DarkGreen, shape = androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.outline_person_24),
+                contentDescription = "Profile",
+                tint = White,
+                modifier = Modifier.size(50.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // User Email
+        Text(
+            text = currentUser?.email ?: "Guest User",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Verification Status
+        if (currentUser != null && !currentUser.isEmailVerified) {
+            Text(
+                text = "Email not verified",
+                fontSize = 14.sp,
+                color = Color.Red
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Profile Options Cards
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Account Information",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = DarkGreen
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "User ID: ${currentUser?.uid?.take(12) ?: "N/A"}...",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Logout Button
+        Button (
+            onClick = {
+                // Sign out from Firebase
+                com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                
+                // Navigate back to Login and clear the back stack
+                val intent = Intent(context, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                context.startActivity(intent)
+                (context as? ComponentActivity)?.finish()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.baseline_arrow_back_24),
+                contentDescription = "Logout",
+                tint = White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Logout",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = White
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "CookiFy v1.0",
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -281,7 +240,6 @@ fun DashboardBody() {
     }
 }
 
-// --- Top App Bar Composable ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBarContent(context: android.content.Context) {
@@ -294,34 +252,17 @@ fun TopAppBarContent(context: android.content.Context) {
         title = { Text("Recipe Finder", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
         navigationIcon = {
             IconButton(onClick = {
-                // Return to Login Screen (or previous activity)
                 (context as? ComponentActivity)?.finish()
             }) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_back_24),
-                    contentDescription = "Back to Login"
+                    contentDescription = "Back"
                 )
             }
-        },
-        actions = {
-            // Placeholder for 'Add Recipe' action (if users can submit recipes)
-//            IconButton(onClick = {
-//                // NOTE: You must create AddRecipeActivity
-//                Toast.makeText(context, "Adding a new recipe...", Toast.LENGTH_SHORT).show()
-//                val intent = Intent(context, AddRecipeActivity::class.java)
-//                context.startActivity(intent)
-//            }) {
-//                // Assuming R.drawable.baseline_add_24 exists
-//                Icon(
-//                    painter = painterResource(R.drawable.baseline_add_24),
-//                    contentDescription = "Add Recipe"
-//                )
-//            }
         }
     )
 }
 
-// --- Bottom Navigation Bar Composable ---
 @Composable
 fun BottomNavBar(listNav: List<NavItem>, selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     NavigationBar(
@@ -345,29 +286,58 @@ fun BottomNavBar(listNav: List<NavItem>, selectedIndex: Int, onItemSelected: (In
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = White,
                     selectedTextColor = DarkGreen,
-                    indicatorColor = LightGreen // Green background for selected item
+                    indicatorColor = LightGreen 
                 )
             )
         }
     }
 }
 
-// --- Home Screen Content (Recipes) ---
 @Composable
 fun HomeScreenContent() {
     val context = LocalContext.current
 
-    // Predefined Recipe Data
+    // Predefined Recipe Data using RecipeModel
     val recipes = listOf(
-        Recipe(1, "Classic Veggie Burger", "A juicy, protein-packed vegetarian delight.", "30 min", R.drawable.burger),
-        Recipe(2, "Spicy Chicken Stir-Fry", "Quick and savory stir-fry with a chili kick.", "20 min", R.drawable.stirfry),
-        Recipe(3, "Homemade Pizza Margherita", "Simple, fresh, and perfect for beginners.", "45 min", R.drawable.pizza)
+        RecipeModel(
+            id = 1, 
+            title = "Classic Veggie Burger", 
+            description = "A juicy, protein-packed vegetarian delight that satisfies even meat lovers.", 
+            prepTime = "30 min", 
+            imageResId = R.drawable.burger,
+            ingredients = listOf("Black beans", "Quinoa", "Breadcrumbs", "Spices", "Burger Potato Bun"),
+            instructions = listOf("Mash beans and mix with cooked quinoa.", "Add spices and breadcrumbs.", "Form patties and grill for 5 mins each side.", "Assemble burger with toppings."),
+            calories = 350,
+            rating = 4.5
+        ),
+        RecipeModel(
+            id = 2, 
+            title = "Spicy Chicken Stir-Fry", 
+            description = "Quick and savory stir-fry with a chili kick, perfect for a weeknight dinner.", 
+            prepTime = "20 min", 
+            imageResId = R.drawable.stirfry,
+            ingredients = listOf("Chicken breast", "Bell peppers", "Soy sauce", "Chili flakes", "Rice"),
+            instructions = listOf("Cut chicken into bite-sized pieces.", "Stir-fry chicken until golden.", "Add vegetables and sauce.", "Serve over steamed rice."),
+            calories = 420,
+            rating = 4.7
+        ),
+        RecipeModel(
+            id = 3, 
+            title = "Homemade Pizza Margherita", 
+            description = "Simple, fresh, and perfect for beginners. The classic Italian taste.", 
+            prepTime = "45 min", 
+            imageResId = R.drawable.pizza,
+            ingredients = listOf("Pizza dough", "Tomato sauce", "Mozzarella cheese", "Fresh basil", "Olive oil"),
+            instructions = listOf("Roll out the dough.", "Spread tomato sauce evenly.", "Top with cheese and bake at 400°F for 15 mins.", "Garnish with fresh basil."),
+            calories = 600,
+            rating = 4.8
+        )
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFEBE9)) // Soft background for the list
+            .background(Color(0xFFEFEBE9))
             .verticalScroll(rememberScrollState())
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -385,17 +355,17 @@ fun HomeScreenContent() {
 
         recipes.forEach { recipe ->
             RecipeCard(recipe = recipe, onClick = {
-                Toast.makeText(context, "Clicked: ${recipe.title}", Toast.LENGTH_SHORT).show()
-                // TODO: Navigate to RecipeDetailActivity
+                val intent = Intent(context, RecipeDetailActivity::class.java)
+                intent.putExtra("recipe", recipe)
+                context.startActivity(intent)
             })
         }
         Spacer(modifier = Modifier.height(30.dp))
     }
 }
 
-// --- Recipe Card Composable ---
 @Composable
-fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
+fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -407,9 +377,8 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = White)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            // Image Section
             Image(
-                painter = painterResource(recipe.imageResId), // Ensure these drawables exist
+                painter = painterResource(recipe.imageResId),
                 contentDescription = recipe.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -418,7 +387,6 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
             )
 
-            // Content Section
             Column(
                 modifier = Modifier
                     .weight(0.6f)
@@ -445,7 +413,6 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Time Icon (Assuming R.drawable.outline_schedule_24 exists)
                     Icon(
                         painter = painterResource(R.drawable.outline_schedule_24),
                         contentDescription = "Preparation Time",
