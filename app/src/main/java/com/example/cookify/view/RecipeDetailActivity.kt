@@ -37,9 +37,16 @@ import com.example.cookify.R
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cookify.repository.FavoriteRepoImpl
+import com.example.cookify.repository.CommentRepoImpl
 import com.example.cookify.viewmodel.FavoriteViewModel
 import com.example.cookify.viewmodel.FavoriteViewModelFactory
+import com.example.cookify.viewmodel.CommentViewModel
+import com.example.cookify.viewmodel.CommentViewModelFactory
+import com.example.cookify.model.CommentModel
 import com.example.cookify.ui.theme.DarkGreen 
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 class RecipeDetailActivity : ComponentActivity() {
@@ -79,12 +86,21 @@ fun RecipeDetailScreen(
     viewModel: FavoriteViewModel = viewModel(
         factory = FavoriteViewModelFactory(FavoriteRepoImpl())
     ),
+    commentViewModel: CommentViewModel = viewModel(
+        factory = CommentViewModelFactory(CommentRepoImpl())
+    ),
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
     val isFavorite by viewModel.isFavorite.observeAsState(false)
+    val comments by commentViewModel.comments.observeAsState(emptyList())
+    var commentText by remember { mutableStateOf("") }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    LaunchedEffect(recipe.id) {
+        commentViewModel.fetchComments(recipe.id.toString())
+    }
 
     Scaffold(
         topBar = {
@@ -232,9 +248,140 @@ fun RecipeDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
+            // Comments Section Title
             item {
-                 Spacer(modifier = Modifier.height(100.dp)) // heavy bottom padding
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Comments (${comments.size})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen
+                )
             }
+
+            // Input for new comment
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = commentText,
+                        onValueChange = { commentText = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Add a comment...") },
+                        maxLines = 3,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            if (currentUser != null) {
+                                if (commentText.isNotBlank()) {
+                                    val newComment = CommentModel(
+                                        userId = currentUser.uid,
+                                        userEmail = currentUser.email ?: "Anonymous",
+                                        recipeId = recipe.id.toString(),
+                                        content = commentText
+                                    )
+                                    commentViewModel.addComment(newComment) { success, msg ->
+                                        if (success) {
+                                            commentText = ""
+                                            Toast.makeText(context, "Comment posted", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(context, "Login to comment", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(com.example.cookify.R.drawable.baseline_notifications_24), // Using search as a placeholder for "Send" if baseline_send isn't there
+                            contentDescription = "Post Comment",
+                            tint = DarkGreen
+                        )
+                    }
+                }
+            }
+
+            // List of comments
+            if (comments.isEmpty()) {
+                item {
+                    Text(
+                        text = "No comments yet. Be the first to share your thoughts!",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            } else {
+                itemsIndexed(comments) { _, comment ->
+                    CommentItem(comment, currentUser?.uid) {
+                        commentViewModel.deleteComment(comment.commentId, recipe.id.toString()) { success, msg ->
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(100.dp)) // heavy bottom padding
+            }
+        }
+    }
+}
+
+@Composable
+fun CommentItem(comment: CommentModel, currentUserId: String?, onDelete: () -> Unit) {
+    val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+    val date = sdf.format(Date(comment.timestamp))
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = comment.userEmail,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkGreen
+                    )
+                    Text(
+                        text = date,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+                
+                if (comment.userId == currentUserId) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            painter = painterResource(android.R.drawable.ic_menu_delete), // Using system delete icon
+                            contentDescription = "Delete Comment",
+                            tint = Color.Red,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = comment.content,
+                fontSize = 15.sp,
+                color = Color.Black
+            )
         }
     }
 }
