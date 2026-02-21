@@ -96,10 +96,41 @@ fun RecipeDetailScreen(
     val isFavorite by viewModel.isFavorite.observeAsState(false)
     val comments by commentViewModel.comments.observeAsState(emptyList())
     var commentText by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var commentToDel by remember { mutableStateOf<CommentModel?>(null) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     LaunchedEffect(recipe.id) {
         commentViewModel.fetchComments(recipe.id.toString())
+    }
+
+    if (showDeleteDialog && commentToDel != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Comment") },
+            text = { Text("Are you sure you want to delete this comment? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        commentViewModel.deleteComment(commentToDel!!.commentId, recipe.id.toString()) { success, msg ->
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            showDeleteDialog = false
+                            commentToDel = null
+                        }
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDeleteDialog = false 
+                    commentToDel = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -320,9 +351,8 @@ fun RecipeDetailScreen(
             } else {
                 itemsIndexed(comments) { _, comment ->
                     CommentItem(comment, currentUser?.uid) {
-                        commentViewModel.deleteComment(comment.commentId, recipe.id.toString()) { success, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        }
+                        commentToDel = comment
+                        showDeleteDialog = true
                     }
                 }
             }
