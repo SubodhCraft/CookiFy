@@ -56,6 +56,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cookify.R
 import com.example.cookify.model.RecipeModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cookify.repository.FavoriteRepoImpl
+import com.example.cookify.viewmodel.FavoriteViewModel
+import com.example.cookify.viewmodel.FavoriteViewModelFactory
 import com.example.cookify.ui.theme.LightGreen
 import com.example.cookify.ui.theme.DarkGreen
 import com.example.cookify.ui.theme.White
@@ -66,11 +72,18 @@ private val GreyText = Color.Black.copy(alpha = 0.6f)
 data class NavItem(val label: String, val icon: Int)
 
 class DashboardActivity : ComponentActivity() {
+    private lateinit var favoriteViewModel: FavoriteViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repo = com.example.cookify.repository.FavoriteRepoImpl()
+        val factory = com.example.cookify.viewmodel.FavoriteViewModelFactory(repo)
+        favoriteViewModel = androidx.lifecycle.ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
+
         setContent {
-            DashboardBody()
+            DashboardBody(favoriteViewModel)
         }
     }
 }
@@ -79,8 +92,51 @@ class DashboardActivity : ComponentActivity() {
 // SearchScreen is now in its own file
 
 @Composable 
-fun FavoritesScreen() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
-    Text("My Favorites", fontSize = 24.sp, color = DarkGreen) 
+fun FavoritesScreen(viewModel: FavoriteViewModel) {
+    val context = LocalContext.current
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val favorites by viewModel.favorites.observeAsState(emptyList())
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            viewModel.fetchFavorites(currentUser.uid)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFEFEBE9))
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "My Favorite Recipes",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = DarkGreen,
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+
+        if (favorites.isEmpty()) {
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Text("No favorites yet", color = Color.Gray)
+            }
+        } else {
+            favorites.forEach { recipe ->
+                RecipeCard(recipe = recipe, onClick = {
+                    val intent = Intent(context, RecipeDetailActivity::class.java)
+                    intent.putExtra("recipe", recipe)
+                    context.startActivity(intent)
+                })
+            }
+        }
+        Spacer(modifier = Modifier.height(30.dp))
+    }
 }
 
 @Composable 
@@ -207,7 +263,11 @@ fun ProfileScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardBody() {
+fun DashboardBody(
+    favoriteViewModel: FavoriteViewModel = viewModel(
+        factory = FavoriteViewModelFactory(FavoriteRepoImpl())
+    )
+) {
     val context = LocalContext.current
 
     // Updated navigation items for a recipe app
@@ -232,7 +292,7 @@ fun DashboardBody() {
             when(selectedIndex){
                 0 -> HomeScreenContent()
                 1 -> SearchScreen()
-                2 -> FavoritesScreen()
+                2 -> FavoritesScreen(favoriteViewModel)
                 3 -> ProfileScreen()
                 else -> HomeScreenContent()
             }

@@ -34,18 +34,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cookify.model.RecipeModel
 import com.example.cookify.R
-import com.example.cookify.ui.theme.DarkGreen // Assuming this exists or I'll define it locally if needed
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cookify.repository.FavoriteRepoImpl
+import com.example.cookify.viewmodel.FavoriteViewModel
+import com.example.cookify.viewmodel.FavoriteViewModelFactory
+import com.example.cookify.ui.theme.DarkGreen 
 
 @OptIn(ExperimentalMaterial3Api::class)
 class RecipeDetailActivity : ComponentActivity() {
+    private lateinit var favoriteViewModel: FavoriteViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repo = com.example.cookify.repository.FavoriteRepoImpl()
+        val factory = com.example.cookify.viewmodel.FavoriteViewModelFactory(repo)
+        favoriteViewModel = androidx.lifecycle.ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
+
         val recipe = intent.getParcelableExtra<RecipeModel>("recipe")
-        
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+        if (recipe != null && currentUser != null) {
+            favoriteViewModel.checkIfFavorite(currentUser.uid, recipe.id)
+        }
+
         setContent {
             if (recipe != null) {
-                RecipeDetailScreen(recipe) { finish() }
+                RecipeDetailScreen(recipe, favoriteViewModel) { finish() }
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error loading recipe details")
@@ -57,8 +74,16 @@ class RecipeDetailActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeDetailScreen(recipe: RecipeModel, onBack: () -> Unit) {
-    var isFavorite by remember { mutableStateOf(false) }
+fun RecipeDetailScreen(
+    recipe: RecipeModel,
+    viewModel: FavoriteViewModel = viewModel(
+        factory = FavoriteViewModelFactory(FavoriteRepoImpl())
+    ),
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val isFavorite by viewModel.isFavorite.observeAsState(false)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -81,7 +106,15 @@ fun RecipeDetailScreen(recipe: RecipeModel, onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { isFavorite = !isFavorite }) {
+                    IconButton(onClick = {
+                        if (currentUser != null) {
+                            viewModel.toggleFavorite(currentUser.uid, recipe) { success, message ->
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Please login to favorite recipes", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(
                             painter = painterResource(if (isFavorite) R.drawable.baseline_favorite_24 else R.drawable.outline_favorite_border_24),
                             contentDescription = "Favorite",
