@@ -36,4 +36,11 @@ class CommentRepoImpl : CommentRepo {
             else callback(false, it.exception?.message ?: "Failed to delete comment")
         }
     }
+
+    override fun updateComment(comment: CommentModel, callback: (Boolean, String) -> Unit) {
+        ref.child(comment.recipeId).child(comment.commentId).setValue(comment).addOnCompleteListener {
+            if (it.isSuccessful) callback(true, "Comment updated")
+            else callback(false, it.exception?.message ?: "Failed to update comment")
+        }
+    }
 }
