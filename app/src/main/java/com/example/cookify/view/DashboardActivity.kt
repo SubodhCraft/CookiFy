@@ -60,6 +60,7 @@ import com.example.cookify.components.RecipeCard
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
 import com.example.cookify.repository.FavoriteRepoImpl
 import com.example.cookify.viewmodel.FavoriteViewModel
 import com.example.cookify.viewmodel.FavoriteViewModelFactory
@@ -281,8 +282,23 @@ fun DashboardBody(
 
     var selectedIndex by remember { mutableIntStateOf(0) }
 
+    // Logic to handle back press: If not on Home, go to Home. Otherwise, proceed with default (exit)
+    BackHandler(enabled = selectedIndex != 0) {
+        selectedIndex = 0
+    }
+
     Scaffold(
-        topBar = { TopAppBarContent(context) },
+        topBar = { 
+            TopAppBarContent(
+                onBackClick = {
+                    if (selectedIndex != 0) {
+                        selectedIndex = 0
+                    } else {
+                        (context as? ComponentActivity)?.finish()
+                    }
+                }
+            ) 
+        },
         bottomBar = { BottomNavBar(listNav, selectedIndex) { index -> selectedIndex = index } }
     ) { padding ->
         Box(
@@ -303,7 +319,7 @@ fun DashboardBody(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBarContent(context: android.content.Context) {
+fun TopAppBarContent(onBackClick: () -> Unit) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = DarkGreen,
@@ -312,9 +328,7 @@ fun TopAppBarContent(context: android.content.Context) {
         ),
         title = { Text("Recipe Finder", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
         navigationIcon = {
-            IconButton(onClick = {
-                (context as? ComponentActivity)?.finish()
-            }) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_back_24),
                     contentDescription = "Back"
