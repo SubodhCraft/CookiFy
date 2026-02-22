@@ -38,10 +38,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cookify.repository.FavoriteRepoImpl
 import com.example.cookify.repository.CommentRepoImpl
+import com.example.cookify.repository.UserRepoImpl
 import com.example.cookify.viewmodel.FavoriteViewModel
 import com.example.cookify.viewmodel.FavoriteViewModelFactory
 import com.example.cookify.viewmodel.CommentViewModel
 import com.example.cookify.viewmodel.CommentViewModelFactory
+import com.example.cookify.viewmodel.UserViewModel
+import com.example.cookify.viewmodel.UserViewModelFactory
 import com.example.cookify.model.CommentModel
 import com.example.cookify.ui.theme.DarkGreen 
 import java.text.SimpleDateFormat
@@ -89,19 +92,33 @@ fun RecipeDetailScreen(
     commentViewModel: CommentViewModel = viewModel(
         factory = CommentViewModelFactory(CommentRepoImpl())
     ),
+    userViewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(UserRepoImpl())
+    ),
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val userProfile by userViewModel.users.observeAsState()
     val isFavorite by viewModel.isFavorite.observeAsState(false)
     val comments by commentViewModel.comments.observeAsState(emptyList())
     var commentText by remember { mutableStateOf("") }
+    
     var showDeleteDialog by remember { mutableStateOf(false) }
     var commentToDel by remember { mutableStateOf<CommentModel?>(null) }
+    
+    var showEditDialog by remember { mutableStateOf(false) }
+    var commentToEdit by remember { mutableStateOf<CommentModel?>(null) }
+    var editedCommentText by remember { mutableStateOf("") }
+    
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     LaunchedEffect(recipe.id) {
         commentViewModel.fetchComments(recipe.id.toString())
+    }
+
+    LaunchedEffect(currentUser?.uid) {
+        currentUser?.uid?.let { userViewModel.getUserById(it) }
     }
 
     if (showDeleteDialog && commentToDel != null) {
@@ -126,6 +143,48 @@ fun RecipeDetailScreen(
                 TextButton(onClick = { 
                     showDeleteDialog = false 
                     commentToDel = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog && commentToEdit != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Comment") },
+            text = {
+                OutlinedTextField(
+                    value = editedCommentText,
+                    onValueChange = { editedCommentText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Update your thoughts...") },
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (editedCommentText.isNotBlank()) {
+                            val updatedComment = commentToEdit!!.copy(content = editedCommentText)
+                            commentViewModel.updateComment(updatedComment) { success, msg ->
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                if (success) {
+                                    showEditDialog = false
+                                    commentToEdit = null
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text("Update", color = DarkGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showEditDialog = false 
+                    commentToEdit = null
                 }) {
                     Text("Cancel")
                 }
@@ -311,7 +370,7 @@ fun RecipeDetailScreen(
                                 if (commentText.isNotBlank()) {
                                     val newComment = CommentModel(
                                         userId = currentUser.uid,
-                                        userEmail = currentUser.email ?: "Anonymous",
+                                        userName = userProfile?.username ?: currentUser.email ?: "Anonymous",
                                         recipeId = recipe.id.toString(),
                                         content = commentText
                                     )
@@ -350,10 +409,19 @@ fun RecipeDetailScreen(
                 }
             } else {
                 itemsIndexed(comments) { _, comment ->
-                    CommentItem(comment, currentUser?.uid) {
-                        commentToDel = comment
-                        showDeleteDialog = true
-                    }
+                    CommentItem(
+                        comment = comment, 
+                        currentUserId = currentUser?.uid,
+                        onDelete = {
+                            commentToDel = comment
+                            showDeleteDialog = true
+                        },
+                        onEdit = {
+                            commentToEdit = comment
+                            editedCommentText = comment.content
+                            showEditDialog = true
+                        }
+                    )
                 }
             }
 
@@ -365,7 +433,12 @@ fun RecipeDetailScreen(
 }
 
 @Composable
-fun CommentItem(comment: CommentModel, currentUserId: String?, onDelete: () -> Unit) {
+fun CommentItem(
+    comment: CommentModel, 
+    currentUserId: String?, 
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
     val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
     val date = sdf.format(Date(comment.timestamp))
 
@@ -383,7 +456,7 @@ fun CommentItem(comment: CommentModel, currentUserId: String?, onDelete: () -> U
             ) {
                 Column {
                     Text(
-                        text = comment.userEmail,
+                        text = comment.userName,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = DarkGreen
@@ -396,13 +469,23 @@ fun CommentItem(comment: CommentModel, currentUserId: String?, onDelete: () -> U
                 }
                 
                 if (comment.userId == currentUserId) {
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_delete), // Using system delete icon
-                            contentDescription = "Delete Comment",
-                            tint = Color.Red,
-                            modifier = Modifier.size(20.dp)
-                        )
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_menu_edit), 
+                                contentDescription = "Edit Comment",
+                                tint = DarkGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_menu_delete), 
+                                contentDescription = "Delete Comment",
+                                tint = Color.Red,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }

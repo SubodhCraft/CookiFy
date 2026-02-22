@@ -1,5 +1,6 @@
 package com.example.cookify.view
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.cookify.components.RecipeCard
+import com.example.cookify.view.RecipeDetailActivity
 
 @Composable
 fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
@@ -49,24 +52,20 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
             recentSearches.forEach { item ->
                 ListItem(
                     headlineContent = { Text(item) },
-                    modifier = Modifier.clickable { viewModel.onQueryChange(item) }
+                    modifier = Modifier.clickable { 
+                        viewModel.onQueryChange(item)
+                        viewModel.performSearch(item, {}, {})
+                    }
                 )
             }
         } else {
             LazyColumn {
                 items(results) { recipe ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        onClick = {
-                             Toast.makeText(context, "Selected: ${recipe.title}", Toast.LENGTH_SHORT).show()
-                             // Future: Navigate to detail
-                        }
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(recipe.title, style = MaterialTheme.typography.titleMedium)
-                            Text(recipe.description, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
+                    RecipeCard(recipe = recipe, onClick = {
+                        val intent = Intent(context, RecipeDetailActivity::class.java)
+                        intent.putExtra("recipe", recipe)
+                        context.startActivity(intent)
+                    })
                 }
             }
         }
