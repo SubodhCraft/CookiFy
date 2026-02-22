@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cookify.R
 import com.example.cookify.model.RecipeModel
+import com.example.cookify.components.RecipeCard
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -358,41 +359,7 @@ fun HomeScreenContent() {
     val context = LocalContext.current
 
     // Predefined Recipe Data using RecipeModel
-    val recipes = listOf(
-        RecipeModel(
-            id = 1, 
-            title = "Classic Veggie Burger", 
-            description = "A juicy, protein-packed vegetarian delight that satisfies even meat lovers.", 
-            prepTime = "30 min", 
-            imageResId = R.drawable.burger,
-            ingredients = listOf("Black beans", "Quinoa", "Breadcrumbs", "Spices", "Burger Potato Bun"),
-            instructions = listOf("Mash beans and mix with cooked quinoa.", "Add spices and breadcrumbs.", "Form patties and grill for 5 mins each side.", "Assemble burger with toppings."),
-            calories = 350,
-            rating = 4.5
-        ),
-        RecipeModel(
-            id = 2, 
-            title = "Spicy Chicken Stir-Fry", 
-            description = "Quick and savory stir-fry with a chili kick, perfect for a weeknight dinner.", 
-            prepTime = "20 min", 
-            imageResId = R.drawable.stirfry,
-            ingredients = listOf("Chicken breast", "Bell peppers", "Soy sauce", "Chili flakes", "Rice"),
-            instructions = listOf("Cut chicken into bite-sized pieces.", "Stir-fry chicken until golden.", "Add vegetables and sauce.", "Serve over steamed rice."),
-            calories = 420,
-            rating = 4.7
-        ),
-        RecipeModel(
-            id = 3, 
-            title = "Homemade Pizza Margherita", 
-            description = "Simple, fresh, and perfect for beginners. The classic Italian taste.", 
-            prepTime = "45 min", 
-            imageResId = R.drawable.pizza,
-            ingredients = listOf("Pizza dough", "Tomato sauce", "Mozzarella cheese", "Fresh basil", "Olive oil"),
-            instructions = listOf("Roll out the dough.", "Spread tomato sauce evenly.", "Top with cheese and bake at 400°F for 15 mins.", "Garnish with fresh basil."),
-            calories = 600,
-            rating = 4.8
-        )
-    )
+    val recipes = com.example.cookify.utils.RecipeData.allRecipes
 
     Column(
         modifier = Modifier
@@ -421,74 +388,6 @@ fun HomeScreenContent() {
             })
         }
         Spacer(modifier = Modifier.height(30.dp))
-    }
-}
-
-@Composable
-fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
-    ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(recipe.imageResId),
-                contentDescription = recipe.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .weight(0.4f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(0.6f)
-                    .fillMaxHeight()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = recipe.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = recipe.description,
-                        fontSize = 14.sp,
-                        color = GreyText,
-                        maxLines = 3
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.outline_schedule_24),
-                        contentDescription = "Preparation Time",
-                        tint = LightGreen,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = recipe.prepTime,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = GreyText
-                    )
-                }
-            }
-        }
     }
 }
 

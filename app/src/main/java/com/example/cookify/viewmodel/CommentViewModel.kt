@@ -26,4 +26,8 @@ class CommentViewModel(private val repo: CommentRepo) : ViewModel() {
     fun deleteComment(commentId: String, recipeId: String, callback: (Boolean, String) -> Unit) {
         repo.deleteComment(commentId, recipeId, callback)
     }
+
+    fun updateComment(comment: CommentModel, callback: (Boolean, String) -> Unit) {
+        repo.updateComment(comment, callback)
+    }
 }
