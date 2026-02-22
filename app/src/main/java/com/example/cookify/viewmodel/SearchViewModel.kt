@@ -20,9 +20,15 @@ class SearchViewModel : ViewModel() {
 
     fun onQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
-        // Optionally clear results when query is empty
-        if (newQuery.isEmpty()) {
+        if (newQuery.isBlank()) {
             _searchResults.value = emptyList()
+        } else {
+            // Dynamic filtering as user types
+            val filteredResults = RecipeData.allRecipes.filter {
+                it.title.contains(newQuery, ignoreCase = true) || 
+                it.description.contains(newQuery, ignoreCase = true)
+            }
+            _searchResults.value = filteredResults
         }
     }
 
