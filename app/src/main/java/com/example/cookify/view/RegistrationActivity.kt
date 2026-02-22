@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -92,7 +93,9 @@ fun RegisterBody() {
         Image(
             painter = painterResource(id = R.drawable.bgforlogin),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.3f),
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.6f),
             contentScale = ContentScale.Crop
         )
 
@@ -104,6 +107,7 @@ fun RegisterBody() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .background(White.copy(alpha = 0.85f))
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

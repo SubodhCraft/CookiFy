@@ -106,25 +106,25 @@ fun LoginBody() {
         unfocusedIndicatorColor = Color.Transparent
     )
     Box(modifier = Modifier.fillMaxSize()) {
-        // --- BACKGROUND IMAGE ---
         Image(
-            painter = painterResource(id = R.drawable.bgforlogin), // Replace with your image name
+            painter = painterResource(id = R.drawable.bgforlogin),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(0.3f), // ADJUST OPACITY HERE (0.0 to 1.0)
+                .alpha(0.6f),
             contentScale = ContentScale.Crop
         )
         Scaffold(
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            containerColor = Color.Transparent
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(White)
-                    .verticalScroll(rememberScrollState()) // Allow scrolling for smaller devices
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .background(White.copy(alpha = 0.85f))
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(40.dp))
