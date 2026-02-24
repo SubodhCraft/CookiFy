@@ -91,4 +91,15 @@ class UserRepoImpl : UserRepo {
             else callback(false, it.exception?.message ?: "Update failed")
         }
     }
+
+    override fun changePassword(newPassword: String, callback: (Boolean, String) -> Unit) {
+        val user = auth.currentUser
+        user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                callback(true, "Password updated successfully")
+            } else {
+                callback(false, task.exception?.message ?: "Failed to update password. You may need to re-login.")
+            }
+        } ?: callback(false, "User not logged in")
+    }
 }

@@ -41,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import com.example.cookify.R
 import com.example.cookify.model.RecipeModel
 import com.example.cookify.components.RecipeCard
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -142,10 +145,88 @@ fun FavoritesScreen(viewModel: FavoriteViewModel) {
 }
 
 @Composable 
-fun ProfileScreen() {
+fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
     val context = LocalContext.current
-    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val currentUser = userViewModel.getCurrentUser()
     
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    if (showPasswordDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showPasswordDialog = false },
+            title = { Text("Change Password", color = DarkGreen, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("New Password") },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    painter = painterResource(id = if (passwordVisible) R.drawable.baseline_visibility_off_24 else R.drawable.baseline_visibility_24),
+                                    contentDescription = "Toggle password visibility",
+                                    tint = DarkGreen
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Confirm New Password") },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        if (newPassword.length < 6) {
+                            Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                        } else if (newPassword != confirmPassword) {
+                            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                        } else {
+                            userViewModel.changePassword(newPassword) { success, msg ->
+                                if (success) {
+                                    Toast.makeText(context, "Password changed. Please login again.", Toast.LENGTH_LONG).show()
+                                    // Logout and redirect to LoginActivity
+                                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                                    val intent = Intent(context, LoginActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    context.startActivity(intent)
+                                    (context as? ComponentActivity)?.finish()
+                                } else {
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text("Update", color = DarkGreen, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { 
+                    showPasswordDialog = false 
+                    newPassword = ""
+                    confirmPassword = ""
+                    passwordVisible = false
+                }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -217,6 +298,42 @@ fun ProfileScreen() {
                 )
             }
         }
+
+        // Change Password Option
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .clickable { showPasswordDialog = true },
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(android.R.drawable.ic_lock_idle_lock),
+                    contentDescription = null,
+                    tint = DarkGreen,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "Change Password",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    painter = painterResource(android.R.drawable.ic_media_play),
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -268,6 +385,9 @@ fun ProfileScreen() {
 fun DashboardBody(
     favoriteViewModel: FavoriteViewModel = viewModel(
         factory = FavoriteViewModelFactory(FavoriteRepoImpl())
+    ),
+    userViewModel: com.example.cookify.viewmodel.UserViewModel = viewModel(
+        factory = com.example.cookify.viewmodel.UserViewModelFactory(com.example.cookify.repository.UserRepoImpl())
     )
 ) {
     val context = LocalContext.current
@@ -310,7 +430,7 @@ fun DashboardBody(
                 0 -> HomeScreenContent()
                 1 -> SearchScreen()
                 2 -> FavoritesScreen(favoriteViewModel)
-                3 -> ProfileScreen()
+                3 -> ProfileScreen(userViewModel)
                 else -> HomeScreenContent()
             }
         }

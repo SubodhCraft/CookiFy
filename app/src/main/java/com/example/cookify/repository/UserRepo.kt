@@ -29,4 +29,6 @@ interface UserRepo {
 
     fun updateProfile(userId: String, model: UserModel,
                       callback: (Boolean, String) -> Unit)
+
+    fun changePassword(newPassword: String, callback: (Boolean, String) -> Unit)
 }

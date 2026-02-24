@@ -75,4 +75,8 @@ class UserViewModel(private val repo: UserRepo) : ViewModel() {
     fun updateProfile(userId: String, model: UserModel, callback: (Boolean, String) -> Unit) {
         repo.updateProfile(userId, model, callback)
     }
+
+    fun changePassword(newPassword: String, callback: (Boolean, String) -> Unit) {
+        repo.changePassword(newPassword, callback)
+    }
 }
