@@ -261,8 +261,13 @@ fun RecipeDetailScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else {
+                    val painter = if (recipe.imageResId != 0) {
+                        painterResource(recipe.imageResId)
+                    } else {
+                        painterResource(R.drawable.burger)
+                    }
                     Image(
-                        painter = painterResource(id = R.drawable.burger),
+                        painter = painter,
                         contentDescription = recipe.title,
                         modifier = Modifier
                             .fillMaxWidth()

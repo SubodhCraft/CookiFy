@@ -10,6 +10,7 @@ data class RecipeModel(
     val description: String = "",
     val prepTime: String = "",
     val imageUrl: String? = null,
+    val imageResId: Int = 0, // Keep for static default recipes
     val ingredients: List<String> = emptyList(),
     val instructions: List<String> = emptyList(),
     val calories: Int = 0,
@@ -24,6 +25,7 @@ data class RecipeModel(
             "description" to description,
             "prepTime" to prepTime,
             "imageUrl" to imageUrl,
+            "imageResId" to imageResId,
             "ingredients" to ingredients,
             "instructions" to instructions,
             "calories" to calories,

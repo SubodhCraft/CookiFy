@@ -38,6 +38,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -634,10 +635,41 @@ fun HomeScreenContent(viewModel: RecipeViewModel) {
                 .padding(horizontal = 16.dp)
         )
 
-        if (isLoading && allRecipes.isEmpty()) {
+        if (isLoading && recipes.isEmpty() && staticRecipes.isEmpty()) {
             CircularProgressIndicator(color = DarkGreen)
         } else {
-            allRecipes.forEach { recipe ->
+            // 1. Community Recipes (From Database)
+            if (recipes.isNotEmpty()) {
+                recipes.forEach { recipe ->
+                    RecipeCard(recipe = recipe, onClick = {
+                        val intent = Intent(context, RecipeDetailActivity::class.java)
+                        intent.putExtra("recipe", recipe)
+                        context.startActivity(intent)
+                    })
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    thickness = 1.dp,
+                    color = Color.LightGray
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // 2. Recipe Gallery (System Defaults)
+            Text(
+                text = "Recipe Gallery",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.DarkGray,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+
+            staticRecipes.forEach { recipe ->
                 RecipeCard(recipe = recipe, onClick = {
                     val intent = Intent(context, RecipeDetailActivity::class.java)
                     intent.putExtra("recipe", recipe)

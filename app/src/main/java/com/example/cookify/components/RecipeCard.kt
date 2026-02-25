@@ -52,8 +52,13 @@ fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
+                    val painter = if (recipe.imageResId != 0) {
+                        painterResource(recipe.imageResId)
+                    } else {
+                        painterResource(R.drawable.burger)
+                    }
                     Image(
-                        painter = painterResource(R.drawable.burger), // Default placeholder
+                        painter = painter,
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
