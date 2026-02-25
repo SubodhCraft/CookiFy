@@ -48,7 +48,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.2")) // Latest stable version.
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1") // This is separate from Firebase BOM
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1") 
+    implementation("com.cloudinary:cloudinary-android:3.0.2")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -70,7 +71,6 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
 
-    implementation("com.cloudinary:cloudinary-android:2.5.0") // Updated to a more recent version
     implementation("io.coil-kt:coil-compose:2.6.0") // Use the stable version of Coil 3 unless you need alpha features
 
     testImplementation(libs.junit)

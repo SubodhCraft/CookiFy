@@ -31,4 +31,6 @@ interface UserRepo {
                       callback: (Boolean, String) -> Unit)
 
     fun changePassword(newPassword: String, callback: (Boolean, String) -> Unit)
+
+    fun uploadImage(context: android.content.Context, imageUri: android.net.Uri, callback: (Boolean, String?) -> Unit)
 }

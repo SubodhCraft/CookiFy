@@ -79,4 +79,8 @@ class UserViewModel(private val repo: UserRepo) : ViewModel() {
     fun changePassword(newPassword: String, callback: (Boolean, String) -> Unit) {
         repo.changePassword(newPassword, callback)
     }
+
+    fun uploadImage(context: android.content.Context, imageUri: android.net.Uri, callback: (Boolean, String?) -> Unit) {
+        repo.uploadImage(context, imageUri, callback)
+    }
 }

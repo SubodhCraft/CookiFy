@@ -60,6 +60,10 @@ import com.example.cookify.model.RecipeModel
 import com.example.cookify.components.RecipeCard
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -148,13 +152,55 @@ fun FavoritesScreen(viewModel: FavoriteViewModel) {
 fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
     val context = LocalContext.current
     val currentUser = userViewModel.getCurrentUser()
+    val userData by userViewModel.users.observeAsState()
     
     var showPasswordDialog by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
+
+    // Fetch user data when screen opens
+    LaunchedEffect(currentUser) {
+        currentUser?.let {
+            userViewModel.getUserById(it.uid)
+        }
+    }
+
+    // Image Picker Launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            isUploading = true
+            userViewModel.uploadImage(context, it) { success, result ->
+                if (success && result != null) {
+                    val imageUrl = result
+                    val updatedUser = userData?.copy(profileImageUrl = imageUrl)
+                    if (updatedUser != null) {
+                        userViewModel.updateProfile(currentUser!!.uid, updatedUser) { successUpdate, msg ->
+                            isUploading = false
+                            if (successUpdate) {
+                                Toast.makeText(context, "Profile picture updated", Toast.LENGTH_SHORT).show()
+                                userViewModel.getUserById(currentUser.uid) // Refresh data
+                            } else {
+                                Toast.makeText(context, "Failed to sync profile: $msg", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        isUploading = false
+                        Toast.makeText(context, "Error: User data not loaded", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    isUploading = false
+                    Toast.makeText(context, result ?: "Failed to upload image", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     if (showPasswordDialog) {
+        // ... (existing dialog code)
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showPasswordDialog = false },
             title = { Text("Change Password", color = DarkGreen, fontWeight = FontWeight.Bold) },
@@ -198,7 +244,6 @@ fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
                             userViewModel.changePassword(newPassword) { success, msg ->
                                 if (success) {
                                     Toast.makeText(context, "Password changed. Please login again.", Toast.LENGTH_LONG).show()
-                                    // Logout and redirect to LoginActivity
                                     com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                                     val intent = Intent(context, LoginActivity::class.java)
                                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -237,29 +282,71 @@ fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
     ) {
         Spacer(modifier = Modifier.height(32.dp))
         
-        // Profile Image Placeholder
+        // Profile Image
         Box(
             modifier = Modifier
-                .size(100.dp)
-                .background(DarkGreen, shape = androidx.compose.foundation.shape.CircleShape),
+                .size(120.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(Color.LightGray)
+                .clickable { imagePickerLauncher.launch("image/*") },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = painterResource(R.drawable.outline_person_24),
-                contentDescription = "Profile",
-                tint = White,
-                modifier = Modifier.size(50.dp)
-            )
+            if (userData?.profileImageUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(userData?.profileImageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Profile Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.outline_person_24),
+                    contentDescription = "Profile",
+                    tint = DarkGreen,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
+            
+            if (isUploading) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    color = DarkGreen
+                )
+            }
+            
+            // Edit Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Text(
+                    text = "Edit",
+                    color = White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // User Email
+        // User Name & Email
         Text(
-            text = currentUser?.email ?: "Guest User",
-            fontSize = 20.sp,
+            text = userData?.let { "${it.firstName} ${it.lastName}" } ?: "Guest User",
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
+        )
+        Text(
+            text = currentUser?.email ?: "",
+            fontSize = 16.sp,
+            color = Color.Gray
         )
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -291,11 +378,11 @@ fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
                     color = DarkGreen
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "User ID: ${currentUser?.uid?.take(12) ?: "N/A"}...",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                userData?.let {
+                    InfoRow("Username", it.username)
+                    InfoRow("Contact", it.contact)
+                    InfoRow("DOB", it.dob)
+                } ?: Text("Loading user information...", color = Color.Gray)
             }
         }
 
@@ -335,15 +422,12 @@ fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         // Logout Button
         Button (
             onClick = {
-                // Sign out from Firebase
                 com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                
-                // Navigate back to Login and clear the back stack
                 val intent = Intent(context, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 context.startActivity(intent)
@@ -370,13 +454,24 @@ fun ProfileScreen(userViewModel: com.example.cookify.viewmodel.UserViewModel) {
             )
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         Text(
             text = "CookiFy v1.0",
             fontSize = 12.sp,
             color = Color.Gray
         )
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, color = Color.Gray, fontSize = 14.sp)
+        Text(text = value, color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
 
