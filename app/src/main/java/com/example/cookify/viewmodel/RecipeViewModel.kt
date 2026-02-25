@@ -35,4 +35,8 @@ class RecipeViewModel(private val repo: RecipeRepo) : ViewModel() {
     fun deleteRecipe(id: String, callback: (Boolean, String) -> Unit) {
         repo.deleteRecipe(id, callback)
     }
+
+    fun updateRecipe(recipe: RecipeModel, callback: (Boolean, String) -> Unit) {
+        repo.updateRecipe(recipe, callback)
+    }
 }

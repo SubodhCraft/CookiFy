@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -80,6 +83,7 @@ import com.example.cookify.ui.theme.White
 import com.example.cookify.viewmodel.RecipeViewModel
 import com.example.cookify.viewmodel.RecipeViewModelFactory
 import com.example.cookify.repository.RecipeRepoImpl
+import com.google.firebase.auth.FirebaseAuth
 
 // --- Shared Colors (If needed) ---
 private val GreyText = Color.Black.copy(alpha = 0.6f)
@@ -107,7 +111,7 @@ class DashboardActivity : ComponentActivity() {
 // SearchScreen is now in its own file
 
 @Composable 
-fun FavoritesScreen(viewModel: FavoriteViewModel) {
+fun BookmarksScreen(viewModel: FavoriteViewModel) {
     val context = LocalContext.current
     val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
     val favorites by viewModel.favorites.observeAsState(emptyList())
@@ -118,39 +122,57 @@ fun FavoritesScreen(viewModel: FavoriteViewModel) {
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFEFEBE9))
-            .verticalScroll(rememberScrollState())
             .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        Text(
-            text = "My Favorite Recipes",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = DarkGreen,
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        )
+        item {
+            Text(
+                text = "My Bookmarked Recipes",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkGreen,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+        }
 
         if (favorites.isEmpty()) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text("No favorites yet", color = Color.Gray)
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No bookmarks yet", color = Color.Gray)
+                }
             }
         } else {
-            favorites.forEach { recipe ->
-                RecipeCard(recipe = recipe, onClick = {
-                    val intent = Intent(context, RecipeDetailActivity::class.java)
-                    intent.putExtra("recipe", recipe)
-                    context.startActivity(intent)
-                })
+            items(favorites) { recipe ->
+                val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                RecipeCard(
+                    recipe = recipe,
+                    currentUserId = currentUserId,
+                    onEdit = {
+                        val intent = Intent(context, AddRecipeActivity::class.java)
+                        intent.putExtra("recipeToEdit", recipe)
+                        context.startActivity(intent)
+                    },
+                    onClick = {
+                        val intent = Intent(context, RecipeDetailActivity::class.java)
+                        intent.putExtra("recipe", recipe)
+                        context.startActivity(intent)
+                    }
+                )
             }
         }
-        Spacer(modifier = Modifier.height(30.dp))
     }
 }
 
@@ -498,9 +520,9 @@ fun DashboardBody(
 
     // Updated navigation items for a recipe app
     val listNav = listOf(
-        NavItem(label = "Home", icon = R.drawable.outline_home_24),
+        NavItem(label = "Home", icon = R.drawable.baseline_home_24),
+        NavItem(label = "Saved", icon = R.drawable.baseline_star_24),
         NavItem(label = "Search", icon = R.drawable.outline_search_24),
-        NavItem(label = "Favorites", icon = R.drawable.outline_favorite_24),
         NavItem(label = "Profile", icon = R.drawable.outline_person_24)
     )
 
@@ -546,8 +568,8 @@ fun DashboardBody(
         ) {
             when(selectedIndex){
                 0 -> HomeScreenContent(recipeViewModel)
-                1 -> SearchScreen()
-                2 -> FavoritesScreen(favoriteViewModel)
+                1 -> BookmarksScreen(favoriteViewModel)
+                2 -> SearchScreen()
                 3 -> ProfileScreen(userViewModel)
                 else -> HomeScreenContent(recipeViewModel)
             }
@@ -611,6 +633,7 @@ fun HomeScreenContent(viewModel: RecipeViewModel) {
     val context = LocalContext.current
     val recipes by viewModel.recipes.observeAsState(emptyList())
     val isLoading by viewModel.isLoading.observeAsState(false)
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     // Predefined static recipes for variety (optional, or just use DB)
     val staticRecipes = com.example.cookify.utils.RecipeData.allRecipes
@@ -641,11 +664,20 @@ fun HomeScreenContent(viewModel: RecipeViewModel) {
             // 1. Community Recipes (From Database)
             if (recipes.isNotEmpty()) {
                 recipes.forEach { recipe ->
-                    RecipeCard(recipe = recipe, onClick = {
-                        val intent = Intent(context, RecipeDetailActivity::class.java)
-                        intent.putExtra("recipe", recipe)
-                        context.startActivity(intent)
-                    })
+                    RecipeCard(
+                        recipe = recipe,
+                        currentUserId = currentUserId,
+                        onEdit = {
+                            val intent = Intent(context, AddRecipeActivity::class.java)
+                            intent.putExtra("recipeToEdit", recipe)
+                            context.startActivity(intent)
+                        },
+                        onClick = {
+                            val intent = Intent(context, RecipeDetailActivity::class.java)
+                            intent.putExtra("recipe", recipe)
+                            context.startActivity(intent)
+                        }
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))

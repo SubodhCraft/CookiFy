@@ -43,8 +43,9 @@ import com.google.firebase.auth.FirebaseAuth
 class AddRecipeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val recipeToEdit = intent.getParcelableExtra<RecipeModel>("recipeToEdit")
         setContent {
-            AddRecipeScreen { finish() }
+            AddRecipeScreen(recipeToEdit = recipeToEdit) { finish() }
         }
     }
 }
@@ -54,24 +55,29 @@ class AddRecipeActivity : ComponentActivity() {
 fun AddRecipeScreen(
     recipeViewModel: RecipeViewModel = viewModel(factory = RecipeViewModelFactory(RecipeRepoImpl())),
     userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory(UserRepoImpl())),
+    recipeToEdit: RecipeModel? = null,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userData by userViewModel.users.observeAsState()
 
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var prepTime by remember { mutableStateOf("") }
-    var calories by remember { mutableStateOf("") }
-    var ingredients by remember { mutableStateOf("") }
-    var instructions by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(recipeToEdit?.title ?: "") }
+    var description by remember { mutableStateOf(recipeToEdit?.description ?: "") }
+    var prepTime by remember { mutableStateOf(recipeToEdit?.prepTime ?: "") }
+    var calories by remember { mutableStateOf(recipeToEdit?.calories?.toString() ?: "") }
+    var ingredients by remember { mutableStateOf(recipeToEdit?.ingredients?.joinToString("\n") ?: "") }
+    var instructions by remember { mutableStateOf(recipeToEdit?.instructions?.joinToString("\n") ?: "") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var existingImageUrl by remember { mutableStateOf(recipeToEdit?.imageUrl) }
     var isUploading by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri -> imageUri = uri }
+    ) { uri -> 
+        imageUri = uri
+        existingImageUrl = null // New image selected
+    }
 
     LaunchedEffect(currentUser?.uid) {
         currentUser?.uid?.let { userViewModel.getUserById(it) }
@@ -80,7 +86,7 @@ fun AddRecipeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create New Recipe", fontWeight = FontWeight.Bold) },
+                title = { Text(if (recipeToEdit == null) "Create New Recipe" else "Edit Recipe", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painterResource(R.drawable.baseline_arrow_back_24), contentDescription = "Back")
@@ -116,10 +122,17 @@ fun AddRecipeScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
+                } else if (existingImageUrl != null) {
+                    AsyncImage(
+                        model = existingImageUrl,
+                        contentDescription = "Existing Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(painterResource(R.drawable.outline_camera_alt_24), contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
-                        Text("Tap to add a photo", color = Color.Gray)
+                        Text("Tap to change photo", color = Color.Gray)
                     }
                 }
             }
@@ -186,23 +199,24 @@ fun AddRecipeScreen(
                     isUploading = true
                     val authorName = userData?.username ?: "Anonymous"
                     
+                    val saveAction = { url: String? ->
+                        saveOrUpdateRecipe(
+                            recipeToEdit, title, description, prepTime, calories, ingredients, instructions,
+                            url ?: existingImageUrl, currentUser?.uid ?: "", authorName, recipeViewModel, context, onBack
+                        )
+                    }
+
                     if (imageUri != null) {
                         userViewModel.uploadImage(context, imageUri!!) { success, imageUrl ->
                             if (success && imageUrl != null) {
-                                saveRecipe(
-                                    title, description, prepTime, calories, ingredients, instructions,
-                                    imageUrl, currentUser?.uid ?: "", authorName, recipeViewModel, context, onBack
-                                )
+                                saveAction(imageUrl)
                             } else {
                                 isUploading = false
                                 Toast.makeText(context, "Image upload failed", Toast.LENGTH_SHORT).show()
                             }
                         }
                     } else {
-                        saveRecipe(
-                            title, description, prepTime, calories, ingredients, instructions,
-                            null, currentUser?.uid ?: "", authorName, recipeViewModel, context, onBack
-                        )
+                        saveAction(null)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(55.dp),
@@ -211,17 +225,19 @@ fun AddRecipeScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = DarkGreen)
             ) {
                 if (isUploading) CircularProgressIndicator(color = White, modifier = Modifier.size(24.dp))
-                else Text("Publish Recipe", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                else Text(if (recipeToEdit == null) "Publish Recipe" else "Update Recipe", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
-private fun saveRecipe(
+private fun saveOrUpdateRecipe(
+    recipeToEdit: RecipeModel?,
     title: String, desc: String, prep: String, cal: String, ing: String, inst: String,
     url: String?, authId: String, authName: String, viewModel: RecipeViewModel, context: android.content.Context, onBack: () -> Unit
 ) {
     val recipe = RecipeModel(
+        id = recipeToEdit?.id ?: "",
         title = title,
         description = desc,
         prepTime = prep,
@@ -231,15 +247,26 @@ private fun saveRecipe(
         instructions = inst.lines().filter { it.isNotBlank() },
         authorId = authId,
         authorName = authName,
-        rating = 5.0 // Default rating for new recipes
+        rating = recipeToEdit?.rating ?: 5.0
     )
 
-    viewModel.addRecipe(recipe) { success, msg ->
-        if (success) {
-            Toast.makeText(context, "Recipe Published!", Toast.LENGTH_SHORT).show()
-            onBack()
-        } else {
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    if (recipeToEdit == null) {
+        viewModel.addRecipe(recipe) { success, msg ->
+            if (success) {
+                Toast.makeText(context, "Recipe Published!", Toast.LENGTH_SHORT).show()
+                onBack()
+            } else {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+    } else {
+        viewModel.updateRecipe(recipe) { success, msg ->
+            if (success) {
+                Toast.makeText(context, "Recipe Updated!", Toast.LENGTH_SHORT).show()
+                onBack()
+            } else {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

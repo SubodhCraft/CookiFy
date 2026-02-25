@@ -23,7 +23,12 @@ import com.example.cookify.model.RecipeModel
 import com.example.cookify.ui.theme.*
 
 @Composable
-fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
+fun RecipeCard(
+    recipe: RecipeModel, 
+    currentUserId: String? = null,
+    onEdit: (() -> Unit)? = null,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -74,12 +79,32 @@ fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(
-                        text = recipe.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = recipe.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (recipe.authorId == currentUserId && onEdit != null) {
+                            IconButton(
+                                onClick = onEdit,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.outline_edit_24),
+                                    contentDescription = "Edit Recipe",
+                                    tint = DarkGreen,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
                     if (recipe.authorName.isNotEmpty()) {
                         Text(
                             text = "by ${recipe.authorName}",

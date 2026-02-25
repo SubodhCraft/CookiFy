@@ -35,8 +35,18 @@ class FavoriteRepoImpl : FavoriteRepo {
     override fun getFavorites(userId: String, callback: (Boolean, List<RecipeModel>?) -> Unit) {
         ref.child(userId).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val favorites = snapshot.children.mapNotNull { it.getValue(RecipeModel::class.java) }
-                callback(true, favorites)
+                try {
+                    val favorites = snapshot.children.mapNotNull { child ->
+                        try {
+                            child.getValue(RecipeModel::class.java)
+                        } catch (e: Exception) {
+                            null // Ignore corrupted data items
+                        }
+                    }
+                    callback(true, favorites)
+                } catch (e: Exception) {
+                    callback(false, emptyList())
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {

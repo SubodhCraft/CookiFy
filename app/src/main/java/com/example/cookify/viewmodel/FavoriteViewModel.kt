@@ -24,6 +24,7 @@ class FavoriteViewModel(private val repo: FavoriteRepo) : ViewModel() {
     }
 
     fun fetchFavorites(userId: String) {
+        if (userId.isEmpty()) return
         repo.getFavorites(userId) { success, data ->
             if (success && data != null) {
                 _favorites.postValue(data)
