@@ -49,9 +49,29 @@ class RecipeRepoImpl : RecipeRepo {
     }
 
     override fun deleteRecipe(id: String, callback: (Boolean, String) -> Unit) {
-        ref.child(id).removeValue().addOnCompleteListener {
-            if (it.isSuccessful) callback(true, "Recipe deleted")
-            else callback(false, it.exception?.message ?: "Delete failed")
+        // 1. Delete from master Recipes node
+        ref.child(id).removeValue().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // 2. Global Cleanup: Remove from EVERYONE'S Favorites
+                val favoritesRef = database.getReference("Favorites")
+                favoritesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        snapshot.children.forEach { userNode ->
+                            if (userNode.hasChild(id)) {
+                                userNode.child(id).ref.removeValue()
+                            }
+                        }
+                        callback(true, "Recipe and all its bookmarks deleted")
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        // Even if cleanup fails, the master record is gone
+                        callback(true, "Recipe deleted (Bookmark cleanup pending)")
+                    }
+                })
+            } else {
+                callback(false, task.exception?.message ?: "Delete failed")
+            }
         }
     }
 }

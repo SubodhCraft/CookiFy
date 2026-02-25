@@ -27,6 +27,7 @@ fun RecipeCard(
     recipe: RecipeModel, 
     currentUserId: String? = null,
     onEdit: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     Card(
@@ -92,16 +93,34 @@ fun RecipeCard(
                             modifier = Modifier.weight(1f)
                         )
                         if (recipe.authorId == currentUserId && onEdit != null) {
-                            IconButton(
-                                onClick = onEdit,
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.outline_edit_24),
-                                    contentDescription = "Edit Recipe",
-                                    tint = DarkGreen,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                            Row {
+                                if (onEdit != null) {
+                                    IconButton(
+                                        onClick = onEdit,
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.outline_edit_24),
+                                            contentDescription = "Edit Recipe",
+                                            tint = DarkGreen,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                if (onDelete != null) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = onDelete,
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.baseline_delete_24),
+                                            contentDescription = "Delete Recipe",
+                                            tint = Color.Red,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

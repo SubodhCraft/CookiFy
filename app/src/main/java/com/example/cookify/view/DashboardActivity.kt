@@ -110,8 +110,30 @@ class DashboardActivity : ComponentActivity() {
 // Dummy screen composables for navigation tabs
 // SearchScreen is now in its own file
 
+@Composable
+fun DeleteConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Recipe", fontWeight = FontWeight.Bold, color = Color.Red) },
+        text = { Text("Are you sure you want to delete this recipe? This action cannot be undone.") },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onConfirm) {
+                Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.Gray)
+            }
+        }
+    )
+}
+
 @Composable 
-fun BookmarksScreen(viewModel: FavoriteViewModel) {
+fun BookmarksScreen(viewModel: FavoriteViewModel, recipeViewModel: RecipeViewModel) {
     val context = LocalContext.current
     val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
     val favorites by viewModel.favorites.observeAsState(emptyList())
@@ -120,6 +142,31 @@ fun BookmarksScreen(viewModel: FavoriteViewModel) {
         if (currentUser != null) {
             viewModel.fetchFavorites(currentUser.uid)
         }
+    }
+
+    var recipeToDelete by remember { mutableStateOf<RecipeModel?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog && recipeToDelete != null) {
+        DeleteConfirmationDialog(
+            onConfirm = {
+                recipeViewModel.deleteRecipe(recipeToDelete!!.id) { success, msg ->
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        recipeViewModel.fetchAllRecipes() // Refresh global list
+                        if (currentUser != null) {
+                            viewModel.fetchFavorites(currentUser.uid) // Refresh favorites
+                        }
+                    }
+                }
+                showDeleteDialog = false
+                recipeToDelete = null
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                recipeToDelete = null
+            }
+        )
     }
 
     LazyColumn(
@@ -164,6 +211,10 @@ fun BookmarksScreen(viewModel: FavoriteViewModel) {
                         val intent = Intent(context, AddRecipeActivity::class.java)
                         intent.putExtra("recipeToEdit", recipe)
                         context.startActivity(intent)
+                    },
+                    onDelete = {
+                        recipeToDelete = recipe
+                        showDeleteDialog = true
                     },
                     onClick = {
                         val intent = Intent(context, RecipeDetailActivity::class.java)
@@ -568,7 +619,7 @@ fun DashboardBody(
         ) {
             when(selectedIndex){
                 0 -> HomeScreenContent(recipeViewModel)
-                1 -> BookmarksScreen(favoriteViewModel)
+                1 -> BookmarksScreen(favoriteViewModel, recipeViewModel)
                 2 -> SearchScreen()
                 3 -> ProfileScreen(userViewModel)
                 else -> HomeScreenContent(recipeViewModel)
@@ -639,6 +690,28 @@ fun HomeScreenContent(viewModel: RecipeViewModel) {
     val staticRecipes = com.example.cookify.utils.RecipeData.allRecipes
     val allRecipes = (staticRecipes + recipes).distinctBy { it.title }
 
+    var recipeToDelete by remember { mutableStateOf<RecipeModel?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog && recipeToDelete != null) {
+        DeleteConfirmationDialog(
+            onConfirm = {
+                viewModel.deleteRecipe(recipeToDelete!!.id) { success, msg ->
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        viewModel.fetchAllRecipes()
+                    }
+                }
+                showDeleteDialog = false
+                recipeToDelete = null
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                recipeToDelete = null
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -671,6 +744,10 @@ fun HomeScreenContent(viewModel: RecipeViewModel) {
                             val intent = Intent(context, AddRecipeActivity::class.java)
                             intent.putExtra("recipeToEdit", recipe)
                             context.startActivity(intent)
+                        },
+                        onDelete = {
+                            recipeToDelete = recipe
+                            showDeleteDialog = true
                         },
                         onClick = {
                             val intent = Intent(context, RecipeDetailActivity::class.java)
