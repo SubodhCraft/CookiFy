@@ -50,6 +50,8 @@ import com.example.cookify.ui.theme.DarkGreen
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 class RecipeDetailActivity : ComponentActivity() {
@@ -245,15 +247,30 @@ fun RecipeDetailScreen(
         ) {
             // Image
             item {
-                Image(
-                    painter = painterResource(id = recipe.imageResId),
-                    contentDescription = recipe.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                if (recipe.imageUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(recipe.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = recipe.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.burger),
+                        contentDescription = recipe.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
             // Quick Stats Row
@@ -275,6 +292,15 @@ fun RecipeDetailScreen(
 
             // Description
             item {
+                if (recipe.authorName.isNotEmpty()) {
+                    Text(
+                        text = "Prepared by ${recipe.authorName}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = DarkGreen,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 Text(
                     text = "Description",
                     fontSize = 18.sp,

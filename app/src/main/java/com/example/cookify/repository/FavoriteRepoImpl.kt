@@ -45,7 +45,7 @@ class FavoriteRepoImpl : FavoriteRepo {
         })
     }
 
-    override fun isFavorite(userId: String, recipeId: Int, callback: (Boolean) -> Unit) {
+    override fun isFavorite(userId: String, recipeId: String, callback: (Boolean) -> Unit) {
         ref.child(userId).child(recipeId.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 callback(snapshot.exists())

@@ -35,6 +35,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -74,6 +76,9 @@ import com.example.cookify.viewmodel.FavoriteViewModelFactory
 import com.example.cookify.ui.theme.LightGreen
 import com.example.cookify.ui.theme.DarkGreen
 import com.example.cookify.ui.theme.White
+import com.example.cookify.viewmodel.RecipeViewModel
+import com.example.cookify.viewmodel.RecipeViewModelFactory
+import com.example.cookify.repository.RecipeRepoImpl
 
 // --- Shared Colors (If needed) ---
 private val GreyText = Color.Black.copy(alpha = 0.6f)
@@ -483,6 +488,9 @@ fun DashboardBody(
     ),
     userViewModel: com.example.cookify.viewmodel.UserViewModel = viewModel(
         factory = com.example.cookify.viewmodel.UserViewModelFactory(com.example.cookify.repository.UserRepoImpl())
+    ),
+    recipeViewModel: RecipeViewModel = viewModel(
+        factory = RecipeViewModelFactory(RecipeRepoImpl())
     )
 ) {
     val context = LocalContext.current
@@ -514,7 +522,21 @@ fun DashboardBody(
                 }
             ) 
         },
-        bottomBar = { BottomNavBar(listNav, selectedIndex) { index -> selectedIndex = index } }
+        bottomBar = { BottomNavBar(listNav, selectedIndex) { index -> selectedIndex = index } },
+        floatingActionButton = {
+            if (selectedIndex == 0) {
+                FloatingActionButton(
+                    onClick = {
+                        val intent = Intent(context, AddRecipeActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    containerColor = DarkGreen,
+                    contentColor = White
+                ) {
+                    Icon(painterResource(R.drawable.baseline_add_24), contentDescription = "Add Recipe")
+                }
+            }
+        }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -522,11 +544,11 @@ fun DashboardBody(
                 .padding(padding)
         ) {
             when(selectedIndex){
-                0 -> HomeScreenContent()
+                0 -> HomeScreenContent(recipeViewModel)
                 1 -> SearchScreen()
                 2 -> FavoritesScreen(favoriteViewModel)
                 3 -> ProfileScreen(userViewModel)
-                else -> HomeScreenContent()
+                else -> HomeScreenContent(recipeViewModel)
             }
         }
     }
@@ -584,11 +606,14 @@ fun BottomNavBar(listNav: List<NavItem>, selectedIndex: Int, onItemSelected: (In
 }
 
 @Composable
-fun HomeScreenContent() {
+fun HomeScreenContent(viewModel: RecipeViewModel) {
     val context = LocalContext.current
+    val recipes by viewModel.recipes.observeAsState(emptyList())
+    val isLoading by viewModel.isLoading.observeAsState(false)
 
-    // Predefined Recipe Data using RecipeModel
-    val recipes = com.example.cookify.utils.RecipeData.allRecipes
+    // Predefined static recipes for variety (optional, or just use DB)
+    val staticRecipes = com.example.cookify.utils.RecipeData.allRecipes
+    val allRecipes = (staticRecipes + recipes).distinctBy { it.title }
 
     Column(
         modifier = Modifier
@@ -609,14 +634,18 @@ fun HomeScreenContent() {
                 .padding(horizontal = 16.dp)
         )
 
-        recipes.forEach { recipe ->
-            RecipeCard(recipe = recipe, onClick = {
-                val intent = Intent(context, RecipeDetailActivity::class.java)
-                intent.putExtra("recipe", recipe)
-                context.startActivity(intent)
-            })
+        if (isLoading && allRecipes.isEmpty()) {
+            CircularProgressIndicator(color = DarkGreen)
+        } else {
+            allRecipes.forEach { recipe ->
+                RecipeCard(recipe = recipe, onClick = {
+                    val intent = Intent(context, RecipeDetailActivity::class.java)
+                    intent.putExtra("recipe", recipe)
+                    context.startActivity(intent)
+                })
+            }
         }
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(80.dp)) // Extra space for FAB
     }
 }
 

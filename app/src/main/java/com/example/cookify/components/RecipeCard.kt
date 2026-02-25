@@ -11,10 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.cookify.R
 import com.example.cookify.model.RecipeModel
 import com.example.cookify.ui.theme.*
@@ -32,15 +35,31 @@ fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(recipe.imageResId),
-                contentDescription = recipe.title,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .weight(0.4f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
-            )
+            ) {
+                if (recipe.imageUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(recipe.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = recipe.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.burger), // Default placeholder
+                        contentDescription = recipe.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier
@@ -56,12 +75,20 @@ fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
+                    if (recipe.authorName.isNotEmpty()) {
+                        Text(
+                            text = "by ${recipe.authorName}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = DarkGreen
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = recipe.description,
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        maxLines = 3
+                        maxLines = 2
                     )
                 }
 
@@ -69,7 +96,7 @@ fun RecipeCard(recipe: RecipeModel, onClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.outline_timer_24), // Changed from outline_schedule_24 to match drawable naming
+                        painter = painterResource(R.drawable.outline_timer_24),
                         contentDescription = "Preparation Time",
                         tint = DarkGreen,
                         modifier = Modifier.size(18.dp)

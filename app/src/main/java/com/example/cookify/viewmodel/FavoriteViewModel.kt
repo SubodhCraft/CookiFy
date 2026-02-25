@@ -31,7 +31,7 @@ class FavoriteViewModel(private val repo: FavoriteRepo) : ViewModel() {
         }
     }
 
-    fun checkIfFavorite(userId: String, recipeId: Int) {
+    fun checkIfFavorite(userId: String, recipeId: String) {
         repo.isFavorite(userId, recipeId) { exists ->
             _isFavorite.postValue(exists)
         }
