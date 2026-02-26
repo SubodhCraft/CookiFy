@@ -1,5 +1,7 @@
 package com.example.cookify.view
 
+import androidx.compose.ui.platform.testTag
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -126,7 +128,7 @@ fun RegisterBody() {
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("Email Address") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("registerEmailInput"),
                     shape = RoundedCornerShape(12.dp),
                     colors = inputColors,
                     singleLine = true
@@ -138,7 +140,7 @@ fun RegisterBody() {
                     value = username,
                     onValueChange = { username = it },
                     placeholder = { Text("Username") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("registerUsernameInput"),
                     shape = RoundedCornerShape(12.dp),
                     colors = inputColors,
                     singleLine = true
@@ -156,7 +158,7 @@ fun RegisterBody() {
                             Icon(painterResource(if (passwordVisibility) R.drawable.baseline_visibility_off_24 else R.drawable.baseline_visibility_24), contentDescription = null)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("registerPasswordInput"),
                     shape = RoundedCornerShape(12.dp),
                     colors = inputColors
                 )
@@ -225,7 +227,7 @@ fun RegisterBody() {
                         }
                     },
                     enabled = !isLoading, // Disable button while loading
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
+                    modifier = Modifier.fillMaxWidth().height(55.dp).testTag("signUpButton"),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DarkGreen)
                 ) {

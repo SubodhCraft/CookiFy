@@ -1,5 +1,7 @@
 package com.example.cookify.view
 
+import androidx.compose.ui.platform.testTag
+
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -141,7 +143,7 @@ fun AddRecipeScreen(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Recipe Title") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("recipeTitleInput"),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -175,7 +177,7 @@ fun AddRecipeScreen(
                 value = ingredients,
                 onValueChange = { ingredients = it },
                 label = { Text("Ingredients (one per line)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("recipeIngredientsInput"),
                 shape = RoundedCornerShape(12.dp),
                 minLines = 3
             )
@@ -184,7 +186,7 @@ fun AddRecipeScreen(
                 value = instructions,
                 onValueChange = { instructions = it },
                 label = { Text("Instructions (one per line)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("recipeInstructionsInput"),
                 shape = RoundedCornerShape(12.dp),
                 minLines = 3
             )
@@ -219,7 +221,7 @@ fun AddRecipeScreen(
                         saveAction(null)
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(55.dp),
+                modifier = Modifier.fillMaxWidth().height(55.dp).testTag("publishRecipeButton"),
                 enabled = !isUploading,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkGreen)

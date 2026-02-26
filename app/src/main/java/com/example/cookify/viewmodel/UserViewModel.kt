@@ -1,6 +1,5 @@
 package com.example.cookify.viewmodel
 
-import android.util.Log // <-- Add this import
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.cookify.model.UserModel
@@ -23,8 +22,7 @@ class UserViewModel(private val repo: UserRepo) : ViewModel() {
         // This will now pass the correct callback to your repository
         repo.register(email, password) { success, message, firebaseUser ->
             if (!success) {
-                // Add logging to see the actual error from the repository
-                Log.e("UserViewModel", "Registration failed: $message")
+                // Registration failed
             }
             // Pass the result directly to the UI
             callback(success, message, firebaseUser)

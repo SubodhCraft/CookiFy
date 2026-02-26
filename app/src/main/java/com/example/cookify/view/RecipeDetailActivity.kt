@@ -1,6 +1,7 @@
 package com.example.cookify.view
 
 import android.app.Activity
+import androidx.compose.ui.platform.testTag
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -130,6 +131,7 @@ fun RecipeDetailScreen(
             text = { Text("Are you sure you want to delete this comment? This action cannot be undone.") },
             confirmButton = {
                 TextButton(
+                    modifier = Modifier.testTag("confirmDeleteButton"),
                     onClick = {
                         commentViewModel.deleteComment(commentToDel!!.commentId, recipe.id.toString()) { success, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -160,13 +162,14 @@ fun RecipeDetailScreen(
                 OutlinedTextField(
                     value = editedCommentText,
                     onValueChange = { editedCommentText = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("editCommentInput"),
                     placeholder = { Text("Update your thoughts...") },
                     shape = RoundedCornerShape(12.dp)
                 )
             },
             confirmButton = {
                 TextButton(
+                    modifier = Modifier.testTag("updateCommentButton"),
                     onClick = {
                         if (editedCommentText.isNotBlank()) {
                             val updatedComment = commentToEdit!!.copy(content = editedCommentText)
@@ -389,13 +392,14 @@ fun RecipeDetailScreen(
                     OutlinedTextField(
                         value = commentText,
                         onValueChange = { commentText = it },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).testTag("commentInput"),
                         placeholder = { Text("Add a comment...") },
                         maxLines = 3,
                         shape = RoundedCornerShape(12.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
+                        modifier = Modifier.testTag("postCommentButton"),
                         onClick = {
                             if (currentUser != null) {
                                 if (commentText.isNotBlank()) {
@@ -501,7 +505,7 @@ fun CommentItem(
                 
                 if (comment.userId == currentUserId) {
                     Row {
-                        IconButton(onClick = onEdit) {
+                        IconButton(onClick = onEdit, modifier = Modifier.testTag("editCommentButton_${comment.content}")) {
                             Icon(
                                 painter = painterResource(android.R.drawable.ic_menu_edit), 
                                 contentDescription = "Edit Comment",
@@ -509,7 +513,7 @@ fun CommentItem(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        IconButton(onClick = onDelete) {
+                        IconButton(onClick = onDelete, modifier = Modifier.testTag("deleteCommentButton_${comment.content}")) {
                             Icon(
                                 painter = painterResource(android.R.drawable.ic_menu_delete), 
                                 contentDescription = "Delete Comment",

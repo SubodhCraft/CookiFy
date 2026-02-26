@@ -1,5 +1,7 @@
 package com.example.cookify.view
 
+import androidx.compose.ui.platform.testTag
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -117,7 +119,7 @@ fun ForgetBody() {
                 ),
                 placeholder = { Text("Email Address") },
                 colors = inputColors,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("forgetEmailInput"),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
             )
@@ -154,7 +156,8 @@ fun ForgetBody() {
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
+                    .height(55.dp)
+                    .testTag("sendResetLinkButton"),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = DarkGreen
                 )

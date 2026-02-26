@@ -1,5 +1,7 @@
 package com.example.cookify.view
 
+import androidx.compose.ui.platform.testTag
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -206,7 +208,7 @@ fun LoginBody() {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     placeholder = { Text("Email or Username") },
                     colors = inputColors,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("emailInput"),
                     shape = RoundedCornerShape(12.dp)
                 )
 
@@ -230,7 +232,7 @@ fun LoginBody() {
                     },
                     visualTransformation = if (!visibility) PasswordVisualTransformation() else VisualTransformation.None,
                     colors = inputColors,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("passwordInput"),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
@@ -282,7 +284,7 @@ fun LoginBody() {
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
+                    modifier = Modifier.fillMaxWidth().height(55.dp).testTag("loginButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = DarkGreen)
                 ) {
                     Text(

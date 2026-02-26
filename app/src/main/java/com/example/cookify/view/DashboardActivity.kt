@@ -1,5 +1,7 @@
 package com.example.cookify.view
 
+import androidx.compose.ui.platform.testTag
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -607,7 +609,7 @@ fun DashboardBody(
                     containerColor = DarkGreen,
                     contentColor = White
                 ) {
-                    Icon(painterResource(R.drawable.baseline_add_24), contentDescription = "Add Recipe")
+                    Icon(painterResource(R.drawable.baseline_add_24), contentDescription = "Add Recipe", modifier = Modifier.testTag("addRecipeFAB"))
                 }
             }
         }
@@ -661,7 +663,7 @@ fun BottomNavBar(listNav: List<NavItem>, selectedIndex: Int, onItemSelected: (In
                     Icon(
                         painter = painterResource(item.icon),
                         contentDescription = item.label,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp).testTag("nav_${item.label}")
                     )
                 },
                 label = {
